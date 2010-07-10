@@ -10,3 +10,5 @@ next: try with Contracts as Modules.
 #then you can include them... 
 #and include multiple sub contracts
 #inherit compile time code
+
+hmm. looks like Contracts will have to be a class anyway... ruby c
