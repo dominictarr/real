@@ -1,0 +1,12 @@
+okay. decided to start over and make a DbC framework. 
+this get much closer to the most important aspect of my idea.
+I'm gonna dive into this and see what I can build on 7 litres of coffee.
+
+wrote a crude start on a Contract class. kinda following rdbc. 
+
+next: try with Contracts as Modules.
+
+#make contracts modules... 
+#then you can include them... 
+#and include multiple sub contracts
+#inherit compile time code
