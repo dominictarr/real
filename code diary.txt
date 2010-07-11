@@ -11,4 +11,29 @@ next: try with Contracts as Modules.
 #and include multiple sub contracts
 #inherit compile time code
 
-hmm. looks like Contracts will have to be a class anyway... ruby c
+hmm. looks like Contracts will have to be a class anyway...
+
+okay, this is coming along.
+
+&&&&&&&&&&&&&&&
+
+it's looking like I'll have to use evals instead of blocks.
+	1. be able to change the binding...
+	2. check the code for naughtyness (security)
+	3. print it out if I want to.
+
+
+okay, a bit of trouble feeding context through to next post step. 
+but I got it working... 
+it's complicated by having a decorator which pretends to be the contracted object.
+
+but I got it to work passing a hash through... that gives the procs the weird syntax of refuring to variables like self[:name] = whatever.
+
+instead, i'll use a context class which has @object and @pre_conditions and @post_conditions 
+
+wow! got it working. 
+testing and tidying tomorrow 
+and add eval to message... that way can customize the message to give good debuging information!
+
+need a way to verify the contract for initialization.
+
