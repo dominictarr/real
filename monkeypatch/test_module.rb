@@ -65,5 +65,36 @@ def test_proc
 	rescue; end
 end
 
+def test_class_space
+	Hello.quick_attr :one,:two
+	h = Hello.new.one(100).two(200)
+	puts h.instance_eval( "one + two")
+	assert_equal 300, h.instance_eval( "one + two")
+		
 end
+
+class Hello2
+	quick_attr :one,:two
+	def three
+		one + two
+	end
+end
+
+def test_class_space2
+
+	h = Hello2.new.one(111).two(222)
+	puts h.three
+	assert_equal 333,h.three
+	one = 10
+	two = 10
+	three = 10
+
+	b = h.instance_eval("proc do one + two + three end")
+	assert_equal 666, b.call
+end
+
+end
+
+
+
 

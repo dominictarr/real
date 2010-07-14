@@ -3,7 +3,7 @@ require 'monkeypatch/array'
 
 require 'contracts/condition'
 
-class ContractViolated < Exception
+class ContractViolated < StandardError
 	def pre?
 		@stage == :pre
 	end
@@ -31,26 +31,30 @@ end
 
   class Contracted
     instance_methods.reject do |method|
-      /__.*__/ === method
+      /__.*__/ === method or 'inspect' == method or 'to_s' == method 
     end.each do |method|
       undef_method(method)
     end
   
     def initialize(object,contract)
 	@object = object
-      @contract = contract
+	@contract = contract
 #     @contract.send_if_respond_to(:invariant)
     end
 
     def method_missing(m_name, *args, &block)
 	h = Context.new(@object)
-	if c = @contract.check_pre(h,m_name,args,&block) then
-		raise ContractViolated.new(:pre,m_name,c,*args) 
-	end
+	#	if c = @contract.check_pre(h,m_name,args,&block) then 
+	#		raise ContractViolated.new(:pre,m_name,c,*args) #why is this here? put it in check_pre
+	#	end
+
+	@contract.check_pre(h,m_name,args,&block)
 	rv = @object.method(m_name).call(*args, &block)
-	if c = @contract.check_post(h,m_name,rv,args,&block) then
-		raise PostContractViolated.new(:post,m_name,c,rv,*args) 
-	end
+	@contract.check_post(h,m_name,rv,args,&block)
+
+	#	if c = @contract.check_post(h,m_name,rv,args,&block) then
+	#		raise PostContractViolated.new(:post,m_name,c,rv,*args) 
+	#	end
 	rv
    end
   end
@@ -64,44 +68,71 @@ class Contract
 		self.class.instance_variable_set(:@pre_conditions,Hash.new) unless self.class.instance_variable_get(:@pre_conditions)
 		self.class.instance_variable_set(:@post_conditions,Hash.new) unless self.class.instance_variable_get(:@post_conditions)
 	end
+	def self.clause(stage,method)
+	cl = clauses[:"#{stage}_#{method}"] ||=[]
+	cl << c = Condition.new.on_method(method).stage(stage)
+	c
+	end
 	def self.pre (method, &block)
-		#define a method which calls the list of pre conditions for that method.
-		@pre_conditions = Hash.new unless @pre_conditions
-		cond = Condition.new.on_method(method).block(block).stage(:pre)
-		@pre_conditions[method] ? @pre_conditions[method] << cond : @pre_conditions[method] = [cond]
-		#define a method which each item in the list
-		cond
+		c = clause (:pre,method)
+		c.block(block) if block#remove this later.
+		c
 	end
 	def self.post (method, &block)
-		@post_conditions = Hash.new unless @post_conditions
-		cond = Condition.new.on_method(method).block(block).stage(:post)
-		@post_conditions[method] ? @post_conditions[method] << cond : @post_conditions[method] = [cond]
-		cond
-	end
-	def self.pre_conditions(m_sym)
-		@pre_conditions = Hash.new unless @pre_conditions
-		@pre_conditions[m_sym]
-	end
-	def self.post_conditions(m_sym)
-		@post_conditions = Hash.new unless @post_conditions
-		@post_conditions[m_sym]
+		c = clause (:post,method)
+		c.block(block) if block#remove this later.
+		c
 	end
 
-	def check_pre(context, method,args,&block)
-		if p = self.class.pre_conditions(method) then
-			p.find {|m|
+	#
+	# Instead of defining different pre_ and post_ versions of each method...
+	# Instead just prefix each symbol with 'pre_' or 'post_' 
+	#
+
+	def self.clauses
+		@clauses = Hash.new unless @clauses
+		@clauses
+	end
+	def self.pre_conditions(m_sym)
+		#@pre_conditions = Hash.new unless @pre_conditions
+		#@pre_conditions[m_sym]
+		clauses[:"pre_#{m_sym}"]
+	end
+	def self.post_conditions(m_sym)
+		clauses[:"post_#{m_sym}"]
+	end
+
+	def check_clause(context,method,args,&block)
+		if p = self.class.clauses[method] then
+			r = p.find {|m| 
 				m.object(context)
 				! m.call(*args)
 			}
+		if r then
+			stage = /(\w+)_/.match(method.to_s)[1]
+			raise ContractViolated.new(stage.to_sym,method,r,*args) 
+		end
+		else nil end
+	end
+
+	def check_pre(context, method,args,&block)#except for return value these two methods are duplicated.
+		if p = self.class.pre_conditions(method) then
+			#find if there is a condition which does not return true.
+			r = p.find {|m| 
+				m.object(context)
+				! m.call(*args)
+			}
+		raise ContractViolated.new(:pre,method,r,*args) if r
 		else nil end
 	end
 	def check_post(context, method,returned,args,&block)
 		if p = self.class.post_conditions(method) then
-			p.find {|m|
-
+			r = p.find {|m|
 				m.object(context)
-				! m.call(returned,*args)
+				context.returned(returned)
+				! m.call(*args)
 			}
+		raise ContractViolated.new(:pre,method,r,*args) if r
 		else nil end
 	end
 end

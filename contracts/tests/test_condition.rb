@@ -38,7 +38,7 @@ def test_z_array_length_inc_hash
 		description("saves length to check after")
 
 	post = Condition.new.on_method(:'<<').
-		block(%<proc do |returned,value| @length + 1 == @object.length end >).
+		block(%<proc do |returned,value| 1 + @length == @object.length end >).
 		name(:length_inc).
 		description("length not correct")
 
@@ -61,7 +61,7 @@ end
 
 def test_condition_block_error_message
 	pre = Condition.new.on_method(:'<<').
-		block(%<proc do |value| @length = @object.length; true; broke! >).
+		block(%<proc do |value| @length = @object.length; true; THIS IS AN INTENTSIONAL SYNTAX ERROR TO TEST ERROR MESSAGES >).
 		name(:length_inc).
 		description("saves length to check after")
 
@@ -74,7 +74,15 @@ def test_condition_block_error_message
 		puts e.message
 	end
 end
-
+def test_eval
+	c = Context.new([])
+	c.returned(:X)
+	assert_equal :X,c.instance_eval("returned")
+	assert_equal :X,c.instance_eval("proc do returned end").call
+	assert_equal :X,c.instance_eval("proc {returned}").call
+	assert_equal :X,c.instance_eval("proc do |val| returned end").call(0)
+	assert_equal :X,c.instance_eval("proc {|val| returned}").call(0)
+end
 
 
 end

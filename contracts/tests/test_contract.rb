@@ -10,10 +10,10 @@ include Test::Unit
 #an empty contract will permit everything.
 #
 class ImpossibleContract < Contract
-	pre(:to_a){false}
+	pre(:to_a).block("proc do false end")
 end
 class ToArrayContract < Contract
-	post(:to_a){|returned| returned.is_a? Array}.description("returns an array")
+	post(:to_a).block("proc do returned.is_a? Array end").description("returns an array")
 
  #is_a should instead be abides_by? (ArrayContract)
 end
@@ -50,15 +50,15 @@ def contract
 end
 def sqrt_contract
 	sqrt = contract
-	sqrt.pre(:sqrt) {|val| val >= 0}.description("argument must be non negative")
-	sqrt.post(:sqrt) {|returned,val|
-		(returned*returned - val).abs < 0.00001
-	}.description("work backwards: returned*returned ==(very close) val").name(:very_close)
+	sqrt.pre(:sqrt) .block("proc do |val| val >= 0 end").description("argument must be non negative")
+	sqrt.post(:sqrt).block("proc do |val|
+		(returned*returned - val).abs < 0.00001 end").
+	description("work backwards: returned*returned ==(very close) val").name(:very_close)
 	sqrt
 end
 def sqrt_contract2
 	sqrt = sqrt_contract
-	sqrt.post(:sqrt) {|returned,val|
+	sqrt.post(:sqrt).block("proc do |val|
 		if val > 1 then
 			val > returned 
 		elsif val == 0  then
@@ -68,7 +68,7 @@ def sqrt_contract2
 		elsif val == 1 then
 			returned == 1
 		end
-	}.
+	end").
 	description("val > returned > 1 or val < returned < 1 or val == returned == 1 or 0"). #let condition take a block which can build a nice error message?
 	name(:range)
 	sqrt
@@ -144,7 +144,7 @@ end
 def test_z_array_length_inc_hash
 	c = contract
 	pre = c.pre(:'<<').block(%<proc do |value| @length = @object.length; true; end >).name(:length_inc).description("saves length to check after")
-	post = c.post(:'<<').block(%<proc do |returned,value| @length + 1 == @object.length end >).name(:length_inc).description("length not correct")
+	post = c.post(:'<<').block(%<proc do |value| @length + 1 == @object.length end >).name(:length_inc).description("length not correct")
 	
 	a = c.check([:a,:b])
 	a << :c
