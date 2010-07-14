@@ -36,7 +36,7 @@ post(:'<<').name(:add_to_end).
 pre(:delete).name(:length_may_dec).
 	block(%<proc do |value| @pre_length = @object.length; true; end >).
 	description("saves length to check after")
-post(:delete).name(:length_inc).
+post(:delete).name(:length_may_dec).
 	block(%{proc do |value| @pre_length >= @object.length end }).
 	description("length cannot increase due to delete opperation")
 post(:delete).name(:deletes_arg).
@@ -44,5 +44,10 @@ post(:delete).name(:deletes_arg).
 	description("after array.delete (x) x is not in array (deletes all x)")
 post(:delete).name(:return_arg_or_nil).
 	block(%<proc do |value| returned == value or returned.nil? end >)
+
+post(:length).block("proc do returned >= 0 end").description ("length must be >= 0").name(:length)
+post(:empty?).block("proc do returned == (object.length == 0) end").description ("empty? means length == 0").name(:empty?)
+
+
 
 end

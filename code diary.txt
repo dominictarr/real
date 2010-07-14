@@ -37,3 +37,28 @@ and add eval to message... that way can customize the message to give good debug
 
 need a way to verify the contract for initialization.
 
+okay, refactored pre and post methods to use the same methods and differ only on symbols.
+
+NEXT: is test framework to process examples for contracts and report on coverage... + and - examples. 
+report on which:
+	- methods don't have contracts
+	- contracts don't have +/- examples.
+
+on the horizon:
+	way to process exception contracts.
+
+okay, contracts are coming along. I can think of a few ways to make examples dryer, 
+maybe write contract clauses along with examples, in a TDD style.
+
+wrote more of the contract for array, but there is a lot of work there. 
+it might be more important to write contracts for contracts, conditions, etc.
+
+and then implement
+copule(contract) --> returns a class which abides by contract.
+i.e. so you can use
+couple(:ArrayContract).new
+instead of 
+Array.new
+
+
+

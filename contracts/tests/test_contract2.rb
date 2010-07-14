@@ -30,9 +30,9 @@ def test_eval_namespace_context
 	tt = test.new
 	assert_equal nil, tt.check_clause(context,:pre_test,1)
 
-		assert_equal 5,local_variables.length
-		assert ! eval(blk).call, "crowed local namespace which return false"
-		assert eval_clean(blk).call, "crowed local namespace which return true"
+	assert_equal 5,local_variables.length
+	assert ! eval(blk).call, "crowed local namespace which return false"
+	assert eval_clean(blk).call, "crowed local namespace which return true"
 end
 
 def test_simple
