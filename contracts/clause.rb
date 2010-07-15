@@ -30,7 +30,7 @@ class Clause
 	def make_block(context_1239875823,block_1239875823)
 		context_1239875823.instance_eval(block_1239875823)
 	end
-	def example(bool = nil)(&block)
+	def example(bool = nil,&block)
 		e = Example.new
 		if block then
 			e.on(&block) 
