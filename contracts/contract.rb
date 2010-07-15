@@ -60,7 +60,6 @@ end
   end
 
 class Contract
-	@pre_conditions = Hash.new
 	def self.check (object)
 		Contracted.new(object,new)
 	end
@@ -75,20 +74,20 @@ class Contract
 	end
 	def self.pre (method, &block)
 		c = clause (:pre,method)
-		c.block(block) if block#remove this later.
+		c.block(block) if block #remove this later.
 		c
 	end
 	def self.post (method, &block)
 		c = clause (:post,method)
-		c.block(block) if block#remove this later.
+		c.block(block) if block #remove this later.
 		c
 	end
-
+	
 	#
 	# Instead of defining different pre_ and post_ versions of each method...
 	# Instead just prefix each symbol with 'pre_' or 'post_' 
 	#
-
+	
 	def self.clauses
 		@clauses = Hash.new unless @clauses
 		@clauses
@@ -109,30 +108,19 @@ class Contract
 				! m.call(*args)
 			}
 		if r then
-			stage = /(\w+)_/.match(method.to_s)[1]
-			raise ContractViolated.new(stage.to_sym,method,r,*args) 
+			stage = (/(\w+?)_/.match(method.to_s)[1]).to_sym
+			method = method.to_s.sub(/\w+?_/,"")
+			puts stage.inspect
+			raise ContractViolated.new(stage,method,r,*args) 
 		end
 		else nil end
 	end
 
 	def check_pre(context, method,args,&block)#except for return value these two methods are duplicated.
-		if p = self.class.pre_conditions(method) then
-			#find if there is a condition which does not return true.
-			r = p.find {|m| 
-				m.object(context)
-				! m.call(*args)
-			}
-		raise ContractViolated.new(:pre,method,r,*args) if r
-		else nil end
+		check_clause(context,:"pre_#{method}",args,&block)
 	end
 	def check_post(context, method,returned,args,&block)
-		if p = self.class.post_conditions(method) then
-			r = p.find {|m|
-				m.object(context)
-				context.returned(returned)
-				! m.call(*args)
-			}
-		raise ContractViolated.new(:pre,method,r,*args) if r
-		else nil end
+		context.returned(returned)
+		check_clause(context,:"post_#{method}",args,&block)
 	end
 end

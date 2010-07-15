@@ -60,5 +60,37 @@ couple(:ArrayContract).new
 instead of 
 Array.new
 
+todo list:
+	better contract testing/examples
+	exception contracts
+	contracts for initialization.
+	 - contracts for class methods. (that covers new)
+	state aware contracts. (i.e. set before get)
+
+	way to refur to a type by it's contracts.
+
+	build model of what classes obey which contracts.(integration of contracts with tests)
+
+		-a body of code which makes objects exercise thier contracts and verify whether they observe them,
+
+	what is a class?
+		a class is only really a class with meta information for a particular type of objects.
+		so the contract for class would be for new to create an instance where x.new.class == x
+		also, simulatiries between X.instance_methods and X.new.methods
+
+		classes which create methods via another static method, create, etc.
+		options
+
+			couple(contract).init(args) -> directly create a object which follows contract.
+			Contract.couple(args) -> "
+			couple(contract).new -> couple(contract) returns the class of an object obeying contract. 
+			
+		have contracts specify a contract for thier class? 
+
+		have methods to specify contracts for class...
+
+	maybe contracts shouldn't be classes at all. they are currently not getting any benefit from being classes.
+	i'll have to implement my own inheritence... but classes don't inherit my clauses because they don't make methods.
+		
 
 

@@ -34,6 +34,7 @@ def test_impossible
 		impossible.to_a
 		fail "expected fail as precondition is violated"
 	rescue ContractViolated => v
+
 		assert v.pre?
 		assert !v.post?
 		assert_equal 'to_a',v.on_method

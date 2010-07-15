@@ -59,7 +59,7 @@ error evaluating Condition block:\n\n#{indent(@block)}\n\n Error:\n #{indent(e.m
 			#save the stack trace from where the clause is created...
 			#then you can give the right line.
 		end
-		passed = r ? "passed" : "FAILED"
+		#passed = r ? "passed" : "FAILED"
 		#puts "#{stage}_#{on_method} #{passed} #{name} for #{@object.object.inspect}"
 		r
 	end
