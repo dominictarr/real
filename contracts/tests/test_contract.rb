@@ -10,10 +10,10 @@ include Test::Unit
 #an empty contract will permit everything.
 #
 ImpossibleContract = Contract.new
-ImpossibleContract.pre(:to_a).block("proc do false end")
+ImpossibleContract.on_method(:to_a).clause.pre("proc do false end")
 
 ToArrayContract = Contract.new
-ToArrayContract.post(:to_a).block("proc do returned.is_a? Array end").description("returns an array")
+ToArrayContract.on_method(:to_a).clause.post("proc do returned.is_a? Array end").description("returns an array")
 
 def test_empty
 	permissive = Contract.new.check("")
@@ -43,32 +43,45 @@ def test_post
 	to_a_able = ToArrayContract.check(h)
 	assert_equal h.to_a, to_a_able.to_a
 end
+
 def contract
 	Contract.new#.check(s = Sqrt.new)
 end
+
 def sqrt_contract
 	sqrt = contract
-	sqrt.pre(:sqrt) .block("proc do |val| val >= 0 end").description("argument must be non negative")
-	sqrt.post(:sqrt).block("proc do |val|
-		(returned*returned - val).abs < 0.00001 end").
-	description("work backwards: returned*returned ==(very close) val").name(:very_close)
+	sqrt.on_method(:sqrt){
+		clause{
+			pre "proc do |val| puts \"VALUE \#{val}\"; val >= 0 end"
+			description("argument must be non negative")
+		}
+		clause{
+			post "proc do |val| (returned*returned - val).abs < 0.00001 end"
+			description "work backwards: returned*returned ==(very close) val"
+			name :very_close
+		}
+	}
 	sqrt
 end
 def sqrt_contract2
 	sqrt = sqrt_contract
-	sqrt.post(:sqrt).block("proc do |val|
-		if val > 1 then
-			val > returned 
-		elsif val == 0  then
-			returned == 0
-		elsif val < 1 then
-			val < returned 
-		elsif val == 1 then
-			returned == 1
-		end
-	end").
-	description("val > returned > 1 or val < returned < 1 or val == returned == 1 or 0"). #let condition take a block which can build a nice error message?
-	name(:range)
+	sqrt.on_method(:sqrt){
+		clause{
+			post("proc do |val|
+			if val > 1 then
+				val > returned 
+			elsif val == 0  then
+				returned == 0
+			elsif val < 1 then
+				val < returned 
+			elsif val == 1 then
+				returned == 1
+			end
+		end")
+			description("val > returned > 1 or val < returned < 1 or val == returned == 1 or 0") #let condition take a block which can build a nice error message?
+			name(:range)
+		}
+	}
 	sqrt
 end
 
@@ -103,14 +116,8 @@ def test_sqrt
 	end
 end
 
-
 def test_post_conditions
 	sqrt = sqrt_contract2
-
-	c = sqrt.pre_conditions(:sqrt)
-	assert c.length == 1
-	assert_equal :sqrt, c[0].on_method
-	assert c[0].pre?
 
 	q = sqrt.check(s = Sqrt.new)
 	assert_equal 1, q.sqrt(1)
@@ -141,12 +148,20 @@ end
 
 def test_z_array_length_inc_hash
 	c = contract
-	pre = c.pre(:'<<').block(%<proc do |value| @length = @object.length; true; end >).name(:length_inc).description("saves length to check after")
-	post = c.post(:'<<').block(%<proc do |value| @length + 1 == @object.length end >).name(:length_inc).description("length not correct")
+	c1 = nil
+	c.on_method(:<<){
+		c1 = clause{
+			pre %<proc do |value| @length = @object.length; true; end >
+			post %<proc do |value| @length + 1 == @object.length end >
+			name :length_inc
+			description "length should increase by 1 following << operation"
+		}
 	
+	}
 	a = c.check([:a,:b])
 	a << :c
 	assert [:a,:b,:c],a
+	assert 2,c1.calls
 end
 
 end

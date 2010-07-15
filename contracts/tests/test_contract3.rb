@@ -19,7 +19,7 @@ end
 
 def test_simple
 	c3 = c2 = c1 = nil
-	simple1 = Contract2.new.on{
+	simple1 = Contract.new.on{
 		on_method(:hello){
 			c1 = clause.name(:is_string).post("proc do returned.is_a? String end")
 		}
@@ -58,11 +58,11 @@ end
 
 def test_more
 	c3 = c2 = c1 = nil
-	simple2 = Contract2.new.on{
+	simple2 = Contract.new.on{
 		on_method(:hello){
 			c1 = clause.on {
 				name :is_string
-				post "proc do puts \"RETURNED: \#{returned}\"; returned.is_a? String end" 
+				post "proc do returned.is_a? String end" 
 		}}
 		on_method(:age,:name){ #this will fail.
 		  c2 = clause.on {

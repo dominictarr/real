@@ -22,13 +22,20 @@ def test_eval_namespace_context
 
 #what about hooking local_vairables so the evaled code can't see any outside variables?pu
 	contract = Contract.new
-	test = contract
-	test.pre(:test).block(blk = "proc {local_variables.find {|v| v.length < 15}.nil? and local_variables.length <= 2;}").
-		description("clause must be evaluated in clean context - only unlikely values allowed (proc argument + others must be over 15 chars)").
-		name(:clean_namespace)
+	blk = nil
+	c1 = nil
+	test = contract.on {
+		on_method(:test){
+			c1 = clause.on{
+				pre(blk = "proc {local_variables.find {|v| v.length < 15}.nil? and local_variables.length <= 2;}")
+				description("clause must be evaluated in clean context - only unlikely values allowed (proc argument + others must be over 15 chars)")
+				name(:clean_namespace)
+			}
+		}
+	}
 	context = Context.new(self)
-	tt = test
-	assert_equal nil, tt.check_clause(context,:pre_test,1)
+
+	assert_equal true, c1.check_pre(context,1)
 
 	assert_equal 5,local_variables.length
 	assert ! eval(blk).call, "crowed local namespace which return false"
@@ -41,46 +48,43 @@ def test_simple
 	#I am refactoring Contract to use not duplicate methods into 'pre_' and 'post_' variations.
 
 	#this trickest part of this was avoiding namespace collisions calling eval.
-
+	c2 = c1 = nil
+	blk = nil
+	m1 = nil
 	sqrt = contract
-	sqrt.pre(:sqrt) {|val| val >= 0}.description("argument must be non negative")
+	sqrt.on{
+		m1 = on_method(:sqrt) {
+			c1 = clause.on{
+				pre "proc {|val| val >= 0}"
+				description("argument must be non negative")
+				name :non_negative
+			}
+			c2 = clause.on{
+				post(blk = "proc {|val| (returned*returned - val).abs < 0.00001}")
+				description("work backwards: returned*returned ==(very close) val")
+				name(:very_close)
+			}
+		}
+		
+	}
 
-	c = sqrt.pre_conditions(:sqrt)
+	c = sqrt.method_clause(:sqrt)
 	assert c
-	d = sqrt.clauses[:pre_sqrt]
-	assert d
-	assert_equal c,d
+	assert m1
+	assert_equal c,m1
 
-	sqrt.post(:sqrt).block(blk = "proc {|val| (returned*returned - val).abs < 0.00001}").
-		description("work backwards: returned*returned ==(very close) val").
-		name(:very_close)
-
-	c = sqrt.post_conditions(:sqrt)
-	assert c,"post clauses accessible via post_conditions"
-	d = sqrt.clauses[:post_sqrt]
-	assert d, "store post conditions in same hash"
 
 	context = Context.new(Sqrt.new)
 	sq = sqrt
-	assert_equal nil, sq.check_pre(context,:sqrt,1)
-	assert_equal nil, sq.check_clause(context,:pre_sqrt,1)
+	assert_equal true, c1.check_pre(context,1)
+	context.returned 1
+	assert_equal true, c2.check_post(context,1)
 
-	assert_exp(ContractViolated) { sq.check_pre(context,:sqrt,-1)}
-	assert_exp(ContractViolated) { sq.check_clause(context,:pre_sqrt,-1)}
+	assert !c1.check_pre(context,-1)
 
-
-	context.returned(1)
 	assert_equal 1,context.returned
-	assert_equal nil,sq.check_post(context,:sqrt,1,1)
+	assert_equal true,c2.check_post(context,1)
+	
 	context.instance_eval(blk).call(1)
-#	context.returned(1)
-	assert_equal 1,context.returned
-#	pp context
-#	assert_equal 1,context.returned
-#	context.instance_eval("val = 1; puts 'context:'; pp self; 
-#		(returned*returned - val).abs < 0.00001")
-	assert_equal nil,sq.check_clause(context,:post_sqrt,1)
-#	sqrt
-
 end
 end

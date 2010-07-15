@@ -117,7 +117,36 @@ Contract.on {
 		exp(block)
 	}
 }
-#this can be done with instance_eval	
+#this can be done with instance_eval
 #could easily add this to anything so you don't have to use ().method(). to chain methods. just call a block in instance namespace.
 
+
+okay! moved Contract2 -> Contract. ported my new test_contract etc.
+
+next: a syntax for specifying test examples inline with the conditions.
+
+for example:
+
+Contract.on {
+	on_method(:name) {
+		clause{...
+			example{
+				pre :x
+				post :y #not all stages necessarily need values
+				returns 100
+				raises Exception
+				args ...
+				fail_stage :pre
+				expect true (or false)
+			}
+		}
+		pass_if ...
+	}
+}
+
+define them within a clause if they apply to that clause only, on in on_method if they apply to that method.
+
+
+then, we need a way to define more ordinary tests and make assertions about contract coverage.
+they arn't directly tests of classes... they are tests of classes which abide by contracts.
 
