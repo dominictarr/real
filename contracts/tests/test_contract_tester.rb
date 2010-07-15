@@ -7,7 +7,7 @@ class TestContractTester < Test::Unit::TestCase
 include Test::Unit
 
 def test_contract
-	contract = Class.new(Contract)
+	contract = Contract.new
 	ct = ContractTester.new.contract(contract)
 	assert_equal contract,ct.contract
 
@@ -22,7 +22,7 @@ class Ex
 end
 
 def example_contract
-	contract = Class.new(Contract)
+	contract = Contract.new
 	contract.pre(:test).block("proc do puts \"VALID? \#{object.valid}\"; object.is_valid? end").name(:test_valid).description("is_valid? == true")
 	contract.post(:test).block("proc do puts \"RETURNED: \#{returned}\"; returned == true end").name(:test_returned).description("returned == true")
 	contract.post(:test).block("proc do object.is_valid? == true end").name(:test_still_valid).description("is_valid? == true")
@@ -54,7 +54,6 @@ def test_run_example
 	assert ct.run_examples
 	#coverage?
 	assert ct.example(valid,valid,true,nil,:test,:test_still_valid,true)
-	assert ct.example(valid,invalid,true,nil,:test,:test_still_valid,false)
 
 end
 

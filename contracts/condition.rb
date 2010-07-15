@@ -6,7 +6,7 @@ require 'pp'
 #require 'awesome'
 class Context
 	include PP::ObjectMixin
-	quick_attr :object,:returned
+	quick_attr :object,:returned, :exception,:args,:block
 
 	def returned (*r)
 		if r.empty?

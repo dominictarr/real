@@ -21,13 +21,13 @@ def test_eval_namespace_context
 #this is part of the contract for condition!
 
 #what about hooking local_vairables so the evaled code can't see any outside variables?pu
-	contract = Class.new(Contract)
+	contract = Contract.new
 	test = contract
 	test.pre(:test).block(blk = "proc {local_variables.find {|v| v.length < 15}.nil? and local_variables.length <= 2;}").
 		description("clause must be evaluated in clean context - only unlikely values allowed (proc argument + others must be over 15 chars)").
 		name(:clean_namespace)
 	context = Context.new(self)
-	tt = test.new
+	tt = test
 	assert_equal nil, tt.check_clause(context,:pre_test,1)
 
 	assert_equal 5,local_variables.length
@@ -36,11 +36,11 @@ def test_eval_namespace_context
 end
 
 def test_simple
-	contract = Class.new(Contract)
+	contract = Contract.new
 	
-#I am refactoring Contract to use not duplicate methods into 'pre_' and 'post_' variations.
+	#I am refactoring Contract to use not duplicate methods into 'pre_' and 'post_' variations.
 
-#this trickest part of this was avoiding namespace collisions calling eval.
+	#this trickest part of this was avoiding namespace collisions calling eval.
 
 	sqrt = contract
 	sqrt.pre(:sqrt) {|val| val >= 0}.description("argument must be non negative")
@@ -51,7 +51,7 @@ def test_simple
 	assert d
 	assert_equal c,d
 
-	sqrt.post(:sqrt).block(blk = "proc {|val|(returned*returned - val).abs < 0.00001}").
+	sqrt.post(:sqrt).block(blk = "proc {|val| (returned*returned - val).abs < 0.00001}").
 		description("work backwards: returned*returned ==(very close) val").
 		name(:very_close)
 
@@ -61,7 +61,7 @@ def test_simple
 	assert d, "store post conditions in same hash"
 
 	context = Context.new(Sqrt.new)
-	sq = sqrt.new
+	sq = sqrt
 	assert_equal nil, sq.check_pre(context,:sqrt,1)
 	assert_equal nil, sq.check_clause(context,:pre_sqrt,1)
 
@@ -70,7 +70,8 @@ def test_simple
 
 
 	context.returned(1)
-	assert_equal nil,sq.check_post(context,1,:sqrt,1)
+	assert_equal 1,context.returned
+	assert_equal nil,sq.check_post(context,:sqrt,1,1)
 	context.instance_eval(blk).call(1)
 #	context.returned(1)
 	assert_equal 1,context.returned

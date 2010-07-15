@@ -9,17 +9,14 @@ include Test::Unit
 #
 #an empty contract will permit everything.
 #
-class ImpossibleContract < Contract
-	pre(:to_a).block("proc do false end")
-end
-class ToArrayContract < Contract
-	post(:to_a).block("proc do returned.is_a? Array end").description("returns an array")
+ImpossibleContract = Contract.new
+ImpossibleContract.pre(:to_a).block("proc do false end")
 
- #is_a should instead be abides_by? (ArrayContract)
-end
+ToArrayContract = Contract.new
+ToArrayContract.post(:to_a).block("proc do returned.is_a? Array end").description("returns an array")
 
 def test_empty
-	permissive = Contract.check("")
+	permissive = Contract.new.check("")
 	permissive.to_a
 	permissive.to_s
 	#assert permissive.passes?
@@ -47,7 +44,7 @@ def test_post
 	assert_equal h.to_a, to_a_able.to_a
 end
 def contract
-	Class.new(Contract)#.check(s = Sqrt.new)
+	Contract.new#.check(s = Sqrt.new)
 end
 def sqrt_contract
 	sqrt = contract

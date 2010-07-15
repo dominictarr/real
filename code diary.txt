@@ -92,5 +92,32 @@ todo list:
 	maybe contracts shouldn't be classes at all. they are currently not getting any benefit from being classes.
 	i'll have to implement my own inheritence... but classes don't inherit my clauses because they don't make methods.
 		
+	sometimes I'll want to say a another contract is a subcontract. (i.e. this contract inherits from that)
+
+	sometimes i'll want to say some other contract's clauses apply in this contract to specific methods.
+
+	say: for(:name,:value,:etc).apply(:attr_contract.attr
+	when(:method1,:method3).abide(other_contract.clause
+
+	from other 
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+okay, just changed contracts so they arn't classes anymore. was very easy! no bugs, just compile errors. 
+next: improve syntax for defining rules.
+
+how about this:
+
+Contract.on {
+	on_method(:name) {
+		clause.name (:clause_name).
+		description(...).
+		pre(block).
+		post(block).
+		exp(block)
+	}
+}
+#this can be done with instance_eval	
+#could easily add this to anything so you don't have to use ().method(). to chain methods. just call a block in instance namespace.
 
 

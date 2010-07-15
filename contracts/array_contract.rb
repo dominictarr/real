@@ -1,6 +1,6 @@
 require 'contracts/contract'
 
-class ArrayContract < Contract
+ArrayContract =  Contract.new
 
      #&, *, +, -, <<, <=>, ==, [], []=, abbrev, assoc, at, choice, clear,
      #collect, collect!, combination, compact, compact!, concat, count,
@@ -15,39 +15,37 @@ class ArrayContract < Contract
      #sort!, take, take_while, to_a, to_ary, to_s, to_yaml, transpose,
      #uniq, uniq!, unshift, values_at, yaml_initialize, zip, |
 
-pre(:'<<').name(:length_inc).
+ArrayContract.pre(:'<<').name(:length_inc).
 	block(%<proc do |value| @length = @object.length; true; end >).
 	description("saves length to check after")
-post(:'<<').name(:length_inc).
+ArrayContract.post(:'<<').name(:length_inc).
 	block(%<proc do |value| 1 + @length == @object.length end >).
 	description("length increases by 1 when <<")
-post(:'<<').name(:return_self).
+ArrayContract.post(:'<<').name(:return_self).
 	block(%<proc do |value| returned.object_id  == @object.object_id end >).
 	description "method returns self"
-post(:'<<').name(:'include?_new').
+ArrayContract.post(:'<<').name(:'include?_new').
 	block(%<proc do |value| returned.include?  value end >).
 	description "arg is now in list"
-post(:'<<').name(:add_to_end).
+ArrayContract.post(:'<<').name(:add_to_end).
 	block(%<proc do |value| returned.last == value end >).
 	description "arg is added to end of list"
 
 #way to test with examples of voilations.
 
-pre(:delete).name(:length_may_dec).
+ArrayContract.pre(:delete).name(:length_may_dec).
 	block(%<proc do |value| @pre_length = @object.length; true; end >).
 	description("saves length to check after")
-post(:delete).name(:length_may_dec).
+ArrayContract.post(:delete).name(:length_may_dec).
 	block(%{proc do |value| @pre_length >= @object.length end }).
 	description("length cannot increase due to delete opperation")
-post(:delete).name(:deletes_arg).
+ArrayContract.post(:delete).name(:deletes_arg).
 	block(%<proc do |value| !@object.include? value end >).
 	description("after array.delete (x) x is not in array (deletes all x)")
-post(:delete).name(:return_arg_or_nil).
+ArrayContract.post(:delete).name(:return_arg_or_nil).
 	block(%<proc do |value| returned == value or returned.nil? end >)
 
-post(:length).block("proc do returned >= 0 end").description ("length must be >= 0").name(:length)
-post(:empty?).block("proc do returned == (object.length == 0) end").description ("empty? means length == 0").name(:empty?)
+ArrayContract.post(:length).block("proc do returned >= 0 end").description ("length must be >= 0").name(:length)
+ArrayContract.post(:empty?).block("proc do returned == (object.length == 0) end").description ("empty? means length == 0").name(:empty?)
 
 
-
-end
