@@ -3,7 +3,7 @@ require 'monkeypatch/array'
 
 require 'contracts/context'
 class Example
-	quick_attr :pre,:post,:returned,:args,:raises,:name,:contractual
+	quick_attr :pre,:post,:returned,:args,:raises,:name,:contractual,:block
 	
 	def on (&block)
 		instance_eval &block
@@ -15,9 +15,10 @@ class Example
 end
 
 class Clause
-	quick_attr :name,:description,:pre,:post,:exp
+	quick_attr :name,:description,:pre,:post,:exp,:examples
 	def initialize 
 		@calls = 0
+		@examples = []
 	end
 	def calls; @calls; end
 	def on (&block)
@@ -31,24 +32,46 @@ class Clause
 		context_1239875823.instance_eval(block_1239875823)
 	end
 	def example(bool = nil,&block)
-		e = Example.new
-		if block then
-			e.on(&block) 
-			e.check
-		self #if there is a block, return self (Clause) so you can chain examples
-		else
+		examples  << e = Example.new
+		e.contractual bool
+		e.on(&block) if block
 		e
-		end
 	end
 
-	def check (context,test,*args,&block)
+	def run_example (e)
+		exp = post = pre = true
+		c = Context.new(e.pre)
+		c.args e.args
+		c.block e.block
+		v = nil
+		begin
+			stage = :pre
+			pre = check_pre(c)
+			if e.raises then
+			stage = :exp
+				c.exception e.raises
+				exp = check_exp(c)
+			else
+			stage = :post
+				c.returned e.returned
+				post = check_post(c)
+			end
+			raise "expected ContractViolation running example: #{e} on #{self}" if !e.contractual
+		rescue ContractViolated => v 
+			v.stage stage
+			raise v if e.contractual
+		end
+		return (pre and exp and post)
+	end
+
+	def check (context,test)
 		#pp @object
 		@calls += 1
 		raise "expected ruby code to run!" if test.nil?
 		begin
 			returned = nil
 			b = make_block(context,test) if test.is_a? String
-			r = b.call(*args,&block)
+			r = b.call(*context.args,&context.block)
 		rescue SyntaxError => e
 			#b = indent(@block)
 			raise "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -56,23 +79,23 @@ error evaluating Condition block:\n\n#{indent(test)}\n\n Error:\n #{indent(e.mes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 \n\n"
 		rescue Exception => e
-			raise "had difficulty executing: vvv\n#{test.to_s}\n^^^\nin context of \nvvv\n#{context.inspect}\n^^^\nargs:\n#{indent(pp_s(args))}\nError:\n#{e}"
+			raise "had difficulty executing: vvv\n#{test.to_s}\n^^^\nin context of \nvvv\n#{context.inspect}\n^^^\nargs:\n#{indent(pp_s(context.args))}\nError:\n#{e}"
 			#save the stack trace from where the clause is created...
 			#then you can give the right line.
 		end
-
+		raise ContractViolated.new.context(context).clause(self) if !r #replace this with a ExampleFailed exception
 		r
 	end
-	def check_pre (context,*args,&block)
-		return check(context,@pre,*args,&block) if @pre
+	def check_pre (context)
+		return check(context,@pre) if @pre
 		true
 	end
-	def check_post (context,*args,&block)
-		return check(context,@post,*args,&block) if @post
+	def check_post (context)
+		return check(context,@post) if @post
 		true
 	end
-	def check_exp (context,*args,&block)
-		return check(context,@exp,*args,&block) if @exp
+	def check_exp (context)
+		return check(context,@exp) if @exp
 		true
 	end
 end

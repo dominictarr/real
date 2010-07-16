@@ -17,8 +17,8 @@ class TestCase
 		assert_equal s1.to_yaml, s2.to_yaml, m
         end
 
-	def assert_exception (message,*exceptions,&block)
-			exceptions = exceptions || [Exception]
+	def assert_exception (message=nil,*exceptions,&block)
+			exceptions = exceptions.empty? ? [Exception] : exceptions 
 			message = message || "expected block to throw expection: #{exceptions.join (",")}"
 
 		pass = true

@@ -59,6 +59,7 @@ class Contract
 	end
 	def on (&block)
 		instance_eval &block
+		self
 	end
 	def on_method(*syms,&block)
 		mc = MethodClauses.new
@@ -71,7 +72,8 @@ class Contract
 
 	def check_contract(context,method,to_call)
 		m = method_clause(method)
-		puts "METHOD_CLAUSE"
+		#puts "METHOD_CLAUSE"
+		#MOVE ALL THIS CODE INTO MethodClause
 		#pp m
 		return to_call.call if m.nil?
 		l = method_clause(method).clauses
@@ -80,7 +82,7 @@ class Contract
 		return to_call.call if l.nil?
 		l.each {|c|
 			print "pre "
-			x = c.check_pre(context,*context.args,&context.block)
+			x = c.check_pre(context)
 			raise ContractViolated.new(:pre,method,c,*context.args) if !x
 		}
 		begin 
@@ -89,14 +91,14 @@ class Contract
 		context.exception(e)
 		l.each {|c|
 			print "exp "
-			x = c.check_exp(context,*context.args,&context.block)
+			x = c.check_exp(context)
 			raise ContractViolated.new(:exp,method,c,*context.args) if !x
 		}
 		raise e
 		end
 		l.each {|c|
 			print "post "
-			x = c.check_post(context,*context.args,&context.block)
+			x = c.check_post(context)
 			raise ContractViolated.new(:post,method,c,*context.args) if !x
 		}
 		puts
