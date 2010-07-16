@@ -1,6 +1,7 @@
 require 'test/unit'
 require 'contracts/contract'
 require 'monkeypatch/array'
+require 'monkeypatch/TestCase'
 require 'examples/sqrt'
 
 class TestContract < Test::Unit::TestCase
@@ -35,13 +36,15 @@ def test_eval_namespace_context
 	}
 	context = Context.new(self)
 
-	assert_equal true, c1.check_pre(context,1)
+	assert_equal true, c1.check_pre(context.args([1]))
 
 	assert_equal 5,local_variables.length
 	assert ! eval(blk).call, "crowed local namespace which return false"
 	assert eval_clean(blk).call, "crowed local namespace which return true"
 end
-
+def assert_violation (&block)
+	assert_exception(nil,ContractViolated,&block)
+end
 def test_simple
 	contract = Contract.new
 	
@@ -76,14 +79,14 @@ def test_simple
 
 	context = Context.new(Sqrt.new)
 	sq = sqrt
-	assert_equal true, c1.check_pre(context,1)
+	assert_equal true, c1.check_pre(context.args [1])
 	context.returned 1
-	assert_equal true, c2.check_post(context,1)
+	assert_equal true, c2.check_post(context.args [1])
 
-	assert !c1.check_pre(context,-1)
+	assert_violation{c1.check_pre(context.args [-1])}
 
 	assert_equal 1,context.returned
-	assert_equal true,c2.check_post(context,1)
+	assert_equal true,c2.check_post(context.args [1])
 	
 	context.instance_eval(blk).call(1)
 end

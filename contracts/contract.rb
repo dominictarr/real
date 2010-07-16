@@ -29,16 +29,72 @@ class Contracted
 end
 
 class MethodClauses #a set of clauses which apply to a particular method
-	quick_attr :clauses
+	quick_attr :clauses,:examples
 
 	def clause(&block)
 		@clauses << c = Clause.new
 		c.on(&block) if block
 		c
 	end
-
-	def initialize
+	def example(bool = nil,&block)
+		examples  << e = Example.new
+		e.contractual bool
+		e.on(&block) if block
+		e
+	end
+	def run_examples
+		examples.each{|e| run_example(e)}	
+	end
+	def run_example(e)
+		begin
+			c = Context.new
+			c.args(e.args)
+			c.block(e.block)
+			c.object(e.pre)
+			to_call = proc {|*args| c.object(e.post); raise e.raises if e.raises; e.returned}
+			check_method(c,to_call)
+			raise "expected #{e} to fail to run on #{self}" if !e.contractual
+			
+		rescue ContractViolated => v
+			raise "example failed: #{e} to run on #{self}" if e.contractual
+		end
+	end
+	def check_method(context,to_call)
+		l = clauses
+		return to_call.call if l.nil?
+		stage = nil
+		begin
+			l.each {|c|
+				stage = :pre 
+				x = c.check_pre(context)
+				raise ContractViolated.new(:pre,method,c,*context.args) if !x
+			}
+			begin 
+				context.returned(to_call.call);
+			rescue Exception => e
+			context.exception(e)
+			l.each {|c|
+				stage = :exp
+				x = c.check_exp(context)
+				raise ContractViolated.new(:exp,method,c,*context.args) if !x
+			}
+			raise e
+			end
+			l.each {|c|
+				stage = :post
+				x = c.check_post(context)
+				raise ContractViolated.new(:post,method,c,*context.args) if !x
+			}
+			puts
+			context.returned
+		rescue ContractViolated => v
+			v.stage stage
+			raise v
+		end
+	end
+def initialize
 		@clauses = []
+		@examples = []
 	end
 	def on (&block)
 		instance_eval &block
@@ -72,36 +128,16 @@ class Contract
 
 	def check_contract(context,method,to_call)
 		m = method_clause(method)
-		#puts "METHOD_CLAUSE"
-		#MOVE ALL THIS CODE INTO MethodClause
-		#pp m
-		return to_call.call if m.nil?
-		l = method_clause(method).clauses
-		puts "CLAUSES"
-		pp l
-		return to_call.call if l.nil?
-		l.each {|c|
-			print "pre "
-			x = c.check_pre(context)
-			raise ContractViolated.new(:pre,method,c,*context.args) if !x
-		}
-		begin 
-			context.returned(to_call.call);
-		rescue Exception => e
-		context.exception(e)
-		l.each {|c|
-			print "exp "
-			x = c.check_exp(context)
-			raise ContractViolated.new(:exp,method,c,*context.args) if !x
-		}
-		raise e
+		begin
+			if m then
+				m.check_method(context,to_call)
+			else
+				to_call.call if m.nil?
+			end
+		rescue ContractViolated => v
+			v.on_method method.to_s
+			raise v
 		end
-		l.each {|c|
-			print "post "
-			x = c.check_post(context)
-			raise ContractViolated.new(:post,method,c,*context.args) if !x
-		}
-		puts
-		context.returned
+
 	end
 end

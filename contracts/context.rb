@@ -15,7 +15,7 @@ class Context
 			@returned = r[0]
 		end
 	end
-	def initialize (obj)
+	def initialize (obj=nil)
 		@object = obj
 		#@pre_conditions = pre
 		#@post_conditions = post

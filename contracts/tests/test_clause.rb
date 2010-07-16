@@ -110,6 +110,31 @@ def test_example
 	c2.examples.each{|e|
 		assert c2.run_example(e)
 	}
+	c2.run_examples
+end
+
+def test_method_example
+	m = nil
+	simple1 = Contract.new.on{
+		m = on_method(:age,:name){ #this will fail.
+			c2 = clause{
+			name(:quick_attr_string)
+			pre("proc do args.empty? or (args.length == 1 and args[0].is_a? String) end")
+			post("proc do (args.empty? ? returned.is_a?(String) : (returned == object)) end")
+		}
+		h = Hi.new
+		example(true){pre h; post h; args ["hi"];returned h}
+		example(true){pre h; post h; args []; returned "hi"}
+		example(false){pre h; args ["hi"]; returned "hi"}
+		example(false){pre h;args []; post h; returned h}
+	}}
+	m.run_examples
+	
+	m.examples.each{|e| 
+		e.contractual !e.contractual
+		assert_exception {m.run_example(e)}
+	}
+
 end
 
 end

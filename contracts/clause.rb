@@ -37,7 +37,9 @@ class Clause
 		e.on(&block) if block
 		e
 	end
-
+	def run_examples
+		examples.each{|e| run_example(e)}	
+	end
 	def run_example (e)
 		exp = post = pre = true
 		c = Context.new(e.pre)
