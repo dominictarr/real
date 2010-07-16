@@ -21,6 +21,9 @@ end
 def assert_violation (&block)
 	assert_exception(nil,ContractViolated,&block)
 end
+def assert_example_fail (&block)
+	assert_exception(nil,ExampleFailed,&block)
+end
 
 def test_simple
 	c3 = c2 = c1 = nil
@@ -132,7 +135,7 @@ def test_method_example
 	
 	m.examples.each{|e| 
 		e.contractual !e.contractual
-		assert_exception {m.run_example(e)}
+		assert_example_fail {m.run_example(e)}
 	}
 
 end

@@ -1,7 +1,8 @@
 require 'monkeypatch/module'
 require 'monkeypatch/array'
-
 require 'contracts/context'
+require 'contracts/example_failed'
+
 class Example
 	quick_attr :pre,:post,:returned,:args,:raises,:name,:contractual,:block
 	
@@ -58,10 +59,11 @@ class Clause
 				c.returned e.returned
 				post = check_post(c)
 			end
-			raise "expected ContractViolation running example: #{e} on #{self}" if !e.contractual
+			raise ExampleFailed.new.clause(self).example(e).stage(stage) if !e.contractual
+#			raise "expected ContractViolation running example: #{e} on #{self}" 
 		rescue ContractViolated => v 
 			v.stage stage
-			raise v if e.contractual
+			raise ExampleFailed.new.clause(self).example(e).stage(stage).error(v) if e.contractual
 		end
 		return (pre and exp and post)
 	end

@@ -53,10 +53,11 @@ class MethodClauses #a set of clauses which apply to a particular method
 			c.object(e.pre)
 			to_call = proc {|*args| c.object(e.post); raise e.raises if e.raises; e.returned}
 			check_method(c,to_call)
-			raise "expected #{e} to fail to run on #{self}" if !e.contractual
 			
+			raise ExampleFailed.new.example(e) if !e.contractual 
 		rescue ContractViolated => v
-			raise "example failed: #{e} to run on #{self}" if e.contractual
+			raise ExampleFailed.new.example(e).error(v).clause(v.clause) if e.contractual
+			#raise "example failed: #{e} to run on #{self}" if e.contractual
 		end
 	end
 	def check_method(context,to_call)
@@ -103,6 +104,7 @@ def initialize
 end
 
 class Contract
+	quick_attr :name
 	def check (object)
 		Contracted.new(object,self)
 	end
@@ -115,6 +117,7 @@ class Contract
 	end
 	def on (&block)
 		instance_eval &block
+		run_examples
 		self
 	end
 	def on_method(*syms,&block)
@@ -125,6 +128,17 @@ class Contract
 		}
 		mc
 	end
+	def run_examples
+		@method_clauses.each{|name,m|
+				begin
+					m.run_examples
+				rescue ExampleFailed => f
+					f.method name
+					raise f
+				end
+		}
+	end
+
 
 	def check_contract(context,method,to_call)
 		m = method_clause(method)

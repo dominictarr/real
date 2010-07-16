@@ -10,9 +10,7 @@ class ContractViolated < StandardError #rewrite this to give better error messag
 		@stage == :post
 	end
 	def message
-		"failed to meet #{stage} clause: #{pp_s(clause)}\ncontext was: #{pp_s(context)}"#\nArguments where: #{context.args.map{|m| m.inspect}.join(",")}"
+		"failed to meet #{stage} clause: \n#{pp_s(clause)}\ncontext was:\n #{pp_s(context)}"#\nArguments where: #{context.args.map{|m| m.inspect}.join(",")}"
 	end
-	#def initialize
-	#end
 end
 

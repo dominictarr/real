@@ -150,3 +150,27 @@ define them within a clause if they apply to that clause only, on in on_method i
 then, we need a way to define more ordinary tests and make assertions about contract coverage.
 they arn't directly tests of classes... they are tests of classes which abide by contracts.
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+got examples working for clauses and method_clauses. 
+just need way to run all examples for a contract from command line... 
+and report on coverage.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#########################
+MEDIUM-BIG IDEA: KAREOKE/REMIX WEBSITE.
+--------------------------------------------------------------
+
+video website where people upload thier videos in multiple 
+layers. (i.e. music, vocal, lyrics) so that they are emminently 
+remixable
+
+enabling songipedia etc! 
+
+it would be easier than this project.
+
+especially with HTML5... 
+
+##########################
+
+report on coverage.... but the next thing is port my current contracts so the new system.
