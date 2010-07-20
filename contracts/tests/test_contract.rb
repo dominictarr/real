@@ -164,5 +164,26 @@ def test_z_array_length_inc_hash
 	assert 2,c1.calls
 end
 
+def test_on_method_several_times
+	c = contract
+	m = c.on_method(:m){}
+	assert_equal m, c.on_method(:m)
+	c1 = nil
+	c.on_method(:m){
+		c1 = clause {
+			name :empty_clause
+		}
+	}
+	c2 = nil
+	assert_equal [c1],m.clauses
+	c.on_method(:m){
+		c2 = clause {
+			name :empty_clause2
+		}
+	}
+	assert_equal [c1,c2],m.clauses
+	
+end
+
 end
 

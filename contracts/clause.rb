@@ -2,21 +2,29 @@ require 'monkeypatch/module'
 require 'monkeypatch/array'
 require 'contracts/context'
 require 'contracts/example_failed'
-
+require 'helpers/string_helper'
 class Example
-	quick_attr :pre,:post,:returned,:args,:raises,:name,:contractual,:block
+	quick_attr :pre,:post,:returned,:args,:raises,:name,:contractual,:block,:line
+	include StringHelper
 	
 	def on (&block)
 		instance_eval &block
+		line caller.first
 		self
 	end
 	def check
 		raise "Example.check not implemented yet"
 	end
+	def to_s
+		s = "Example:#{name}-- should: #{contractual ? "pass" : "fail"}\n  (from #{line})"
+		s << indent(vals_of(:pre,:post,:returned,:args,:raises))
+		s << "\n"
+end
 end
 
 class Clause
-	quick_attr :name,:description,:pre,:post,:exp,:examples
+	quick_attr :name,:description,:pre,:post,:exp,:examples,:line
+	include StringHelper
 	def initialize 
 		@calls = 0
 		@examples = []
@@ -24,10 +32,8 @@ class Clause
 	def calls; @calls; end
 	def on (&block)
 		instance_eval &block
+		line caller.first
 		self
-	end
-	def indent(string)#move to a print helper mixin?
-		string.split("\n").map{|line| "\t#{line}"}.join("\n")
 	end
 	def make_block(context_1239875823,block_1239875823)
 		context_1239875823.instance_eval(block_1239875823)
@@ -36,6 +42,7 @@ class Clause
 		examples  << e = Example.new
 		e.contractual bool
 		e.on(&block) if block
+		e.line caller.first
 		e
 	end
 	def run_examples
@@ -77,13 +84,30 @@ class Clause
 			b = make_block(context,test) if test.is_a? String
 			r = b.call(*context.args,&context.block)
 		rescue SyntaxError => e
-			#b = indent(@block)
-			raise "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-error evaluating Condition block:\n\n#{indent(test)}\n\n Error:\n #{indent(e.message)}\nContext:\n#{indent(pp_s(context))}\n
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-\n\n"
+			raise SyntaxError.new("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  error evaluating Condition block:\n
+#{indent(test,"  ")}
+
+  (from #{line})
+
+in context:
+#{indent(context.to_s,"    ")}
+  SyntaxError:
+#{indent(e.message,"    ")}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 		rescue Exception => e
-			raise "had difficulty executing: vvv\n#{test.to_s}\n^^^\nin context of \nvvv\n#{context.inspect}\n^^^\nargs:\n#{indent(pp_s(context.args))}\nError:\n#{e}"
+			raise "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  tried to call:
+#{indent(test.to_s,"    ")}
+
+  (from #{line})
+  
+  in context: 
+#{indent(context.to_s,"    ")}
+  #{e.class}:
+#{indent(e.message,"    ")}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+
 			#save the stack trace from where the clause is created...
 			#then you can give the right line.
 		end
@@ -101,5 +125,13 @@ error evaluating Condition block:\n\n#{indent(test)}\n\n Error:\n #{indent(e.mes
 	def check_exp (context)
 		return check(context,@exp) if @exp
 		true
+	end
+	
+	def to_s
+		s = "Clause:#{name}-- \"#{description}\"\n  (from #{line})\n"
+		s << indent(vals_of(:pre,:post,:exp,:examples),"  ")
+		s << "\n"
+		#s << "\n/>\n"
+		s
 	end
 end

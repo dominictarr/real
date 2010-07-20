@@ -165,7 +165,7 @@ video website where people upload thier videos in multiple
 layers. (i.e. music, vocal, lyrics) so that they are emminently 
 remixable
 
-enabling songipedia etc! 
+enabling songipedia etc!
 
 it would be easier than this project.
 
@@ -174,3 +174,48 @@ especially with HTML5...
 ##########################
 
 report on coverage.... but the next thing is port my current contracts so the new system.
+
+done: array_contract
+
+condition contract is redundant because condition isn't used.
+
+next: add a clause from somewhere else...
+call on_method(with_same_name) multiple times.
+done!
+
+1. add_clauses (clause,...) ? -- DONE
+2. and a way to refur to clause by name... --DONE (but not optomised to ordered hash)
+	i'll want an ordered_hash. (hash which preserves input order)
+3. retrive and save error line numbers for nice error messages. -- DONE
+	--call caller in function and save first in list. print in error message.
+	I need a user testing thing for error messages!
+	whats all my error messages?
+		-true example failed
+		-false example failed to fail
+		-contract violation
+		-pre/post/exp syntax error,
+		-pre/post/exp runtime error
+4. clauses which specify the contract for blocks passed to a method? ... 
+	wrap the block in a block which checks contract and calls it. calls it...
+5. indirect testing of contractee ... that will need test for new...
+
+NO! just write contract for initialize!
+
+what does the test look like? make a block.. 
+and eval it in the context of the that object? 
+or pass the object into single arity test functions?
+
+well, there isn't much difference, except the first case can't initialize the subject.
+
+test(contract){
+	test(*init_args) {
+		#from self context
+	}
+...or...
+	test(*init_args) {|object|
+		test initialized the object.
+		actions...
+	}
+?
+}
+couple(contracts,...).new(*args)

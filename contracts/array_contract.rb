@@ -61,7 +61,6 @@ ArrayContract =  Contract.new.on{
 			pre x;post y;args [:x];returned [:a,:b,:x]
 		}
 	}
-
 #way to test with examples of voilations.
 	on_method(:delete){
 		clause {

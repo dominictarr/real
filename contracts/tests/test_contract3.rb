@@ -27,7 +27,7 @@ def test_more
 		on_method(:tantrum){
 			c3 = clause.on{
 				name :allows_runtime_error
-				exp "proc do puts \"exception!\" exception.is_a? RuntimeError end"
+				exp "proc do puts \"exception!\"; exception.is_a? RuntimeError end"
 		}}
 	}
 

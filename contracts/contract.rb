@@ -29,12 +29,35 @@ class Contracted
 end
 
 class MethodClauses #a set of clauses which apply to a particular method
-	quick_attr :clauses,:examples
+	quick_attr :clauses,:examples,:line
 
-	def clause(&block)
-		@clauses << c = Clause.new
-		c.on(&block) if block
+	def named_clause(name)
+		return nil if name.nil?
+		clauses.find{|f|
+			f.name == name			
+		}
+	end
+	def clause(name=nil,&block)
+		c = (named_clause(name) || Clause.new.name(name))
+		@clauses << c unless @clauses.include? c
+		if block then
+			c.on(&block)
+			c.line caller.first
+		end
+		#throw exception is name is used.
+		if c.name then
+			sel = @clauses.select {|s|
+				s.name == c.name
+			}
+			if sel.length > 1 then
+				@clauses.delete c
+				raise "error, more than one clause named #{c.name}:#{pp_s(sel)} for #{self}"
+			end
+		end
 		c
+	end
+	def add_clauses(*clauses)
+		@clauses = @clauses + clauses		
 	end
 	def example(bool = nil,&block)
 		examples  << e = Example.new
@@ -104,7 +127,7 @@ def initialize
 end
 
 class Contract
-	quick_attr :name
+	quick_attr :name,:line
 	def check (object)
 		Contracted.new(object,self)
 	end
@@ -117,12 +140,25 @@ class Contract
 	end
 	def on (&block)
 		instance_eval &block
+		line caller.first
 		run_examples
 		self
 	end
+	def get_method_clauses_for(*syms)
+		c = []
+		syms.each{|s|
+			c << @method_clauses[s]
+		}
+		c.uniq!
+		raise "#{syms.inspect} refur to multiple MethodClauses:#{c.inspect}" if c.length > 1
+		c[0] ||  MethodClauses.new
+	end
 	def on_method(*syms,&block)
-		mc = MethodClauses.new
-		mc.on(&block) if block
+		mc = get_method_clauses_for(*syms)
+		if block then
+			mc.on(&block) 
+			mc.line caller.first
+		end
 		syms.each{|sym|
 			@method_clauses[sym] = mc
 		}

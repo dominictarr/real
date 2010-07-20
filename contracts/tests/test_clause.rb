@@ -121,15 +121,15 @@ def test_method_example
 	simple1 = Contract.new.on{
 		m = on_method(:age,:name){ #this will fail.
 			c2 = clause{
-			name(:quick_attr_string)
-			pre("proc do args.empty? or (args.length == 1 and args[0].is_a? String) end")
-			post("proc do (args.empty? ? returned.is_a?(String) : (returned == object)) end")
-		}
-		h = Hi.new
-		example(true){pre h; post h; args ["hi"];returned h}
-		example(true){pre h; post h; args []; returned "hi"}
-		example(false){pre h; args ["hi"]; returned "hi"}
-		example(false){pre h;args []; post h; returned h}
+				name(:quick_attr_string)
+				pre("proc do args.empty? or (args.length == 1 and args[0].is_a? String) end")
+				post("proc do (args.empty? ? returned.is_a?(String) : (returned == object)) end")
+			}
+			h = Hi.new
+			example(true){pre h; post h; args ["hi"];returned h}
+			example(true){pre h; post h; args []; returned "hi"}
+			example(false){pre h; args ["hi"]; returned "hi"}
+			example(false){pre h;args []; post h; returned h}
 	}}
 	m.run_examples
 	
@@ -140,4 +140,70 @@ def test_method_example
 
 end
 
+def test_add_clauses
+	c2 = m = nil
+	simple1 = Contract.new.on{
+		m = on_method(:age){ #this will fail.
+			c2 = clause{
+				name(:quick_attr_string)
+				pre("proc do args.empty? or (args.length == 1 and args[0].is_a? String) end")
+				post("proc do (args.empty? ? returned.is_a?(String) : (returned == object)) end")
+			}
+			h = Hi.new
+			example(true){pre h; post h; args ["hi"];returned h}
+			example(true){pre h; post h; args []; returned "hi"}
+			example(false){pre h; args ["hi"]; returned "hi"}
+			example(false){pre h;args []; post h; returned h}
+		}
+		m2 = on_method(:name).add_clauses(c2)
+		
+	}
+	simple1.run_examples
+	assert_equal 16,c2.calls
+	assert_equal c2, simple1.on_method(:name).named_clause(:quick_attr_string)
+	assert_equal c2, simple1.on_method(:name).clause(:quick_attr_string)
+
+	assert_exception{ simple1.on_method(:name).clause{
+			name(:quick_attr_string)
+		#	pre("proc do args.empty? or (args.length == 1 and not args[0].nil?) end")
+		#	post("proc do (args.empty? ? !returned.nil? : (returned == object)) end")
+		#	description "quick_attr but cannot be set to nil"
+		}
+	}
+	c3 = nil
+	assert_equal c2, simple1.on_method(:name).named_clause(:quick_attr_string)
+	simple1.on_method(:name){
+		c3 = clause(:quick_attr_string){
+			pre("proc do args.empty? or (args.length == 1 and 
+				(args[0].is_a? String or 
+				args[0].is_a? Numeric)) end")
+			post("proc do (args.empty? ? 
+			(returned.is_a? String or returned.is_a? Numeric) : 
+			(returned == object)) end")
+			description "quick_attr but only string or number"
+		}
+		h = Hi.new
+		example(true){pre h; post h; args [27];returned h}
+		example(true){pre h; post h; args []; returned 27}
+		example(false){pre h; args [27]; returned 27}
+		example(false){pre h;args []; post h; returned h}
+	}
+	assert_equal c3, simple1.on_method(:name).named_clause(:quick_attr_string)
+	simple1.on_method(:name).run_examples
+end
+
+	def test_error_message
+		e1 = c3 = nil
+		simple1 = Contract.new.on{
+			on_method(:name){
+				c3 = clause(:always_fail){
+					pre "proc do false end"
+				e1 = example(true){}
+				}
+			}
+		}
+		assert e1.line
+		puts e1.line
+		assert e1.line.include? "in `test_error_message'"
+	end
 end
