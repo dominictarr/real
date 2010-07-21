@@ -11,13 +11,19 @@ class Contracted
 	end.each do |method|
 		undef_method(method)
 	end
+quick_array :contracts
   
 	def initialize(object,contract)
 		@object = object
 		@contract = contract
+		contracts(contract)
+	end
+	def is_wrapped?
+		true
 	end
 
 	def method_missing(m_name, *args, &block)
+#		puts "\t#{m_name}"
 		h = Context.new(@object)
 		h.args(args)
 		h.block(block)
@@ -129,6 +135,7 @@ end
 class Contract
 	quick_attr :name,:line
 	def check (object)
+		puts "wrap #{object.class} in #{self.name}"
 		Contracted.new(object,self)
 	end
 	def initialize

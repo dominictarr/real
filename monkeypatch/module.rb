@@ -24,6 +24,21 @@ def quick_attr (*args)
 	#end"
 	}
 end
+
+def quick_array (*args)
+	args.each {|var|
+		ivar = "@#{var}"
+	class_eval "def #{var} (*arg)
+	 	if arg.length == 0 then
+			return #{ivar} = #{ivar} || []
+		else
+			#{ivar} = arg 
+			self
+		end
+	end"
+		
+	}
+end
 end
 
 

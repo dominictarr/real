@@ -1,6 +1,7 @@
 require 'contracts/contract'
 
 ArrayContract =  Contract.new.on{
+	name :ArrayContract
      #&, *, +, -, <<, <=>, ==, [], []=, abbrev, assoc, at, choice, clear,
      #collect, collect!, combination, compact, compact!, concat, count,
      #cycle, dclone, delete, delete_at, delete_if, drop, drop_while,

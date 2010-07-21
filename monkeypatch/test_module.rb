@@ -1,10 +1,8 @@
 require 'monkeypatch/module'
 require 'test/unit'
 
-
 class TestModule < Test::Unit::TestCase 
 include Test::Unit
-
 
 class Hello
  end
@@ -75,12 +73,13 @@ end
 
 class Hello2
 	quick_attr :one,:two
+	quick_array :several
 	def three
 		one + two
 	end
 end
 
-def test_class_space2
+def dont_test_class_space2
 
 	h = Hello2.new.one(111).two(222)
 	puts h.three
@@ -91,6 +90,14 @@ def test_class_space2
 
 	b = h.instance_eval("proc do one + two + three end")
 	assert_equal 666, b.call
+end
+
+def test_quick_array
+	h = Hello2.new.several(:a,:b)
+	assert_equal [:a,:b],h.several
+	h.several(:a)
+	assert_equal [:a],h.several
+	
 end
 
 end

@@ -219,3 +219,27 @@ test(contract){
 ?
 }
 couple(contracts,...).new(*args)
+
+have couple return a class... Contractor (or something) with function new... 
+which returns a new instance of a class abiding by the contract.
+by sett
+couple(contract).wrapped(true).new(*args) #wrap with contract checker
+couple(contract).wrapped(false).new(*args) #dont wrap with contract checker
+
+#wrapping can be set globally on whether it's in development or production or debug mode.
+other useful methods:
+classes #classes abiding by contracts - in order of preference
+contracts #contracts
+perfured #the class which will be initialized by new
+
+also, it has === and all that to test for stuff like a class does.
+
+x = couple(XContract).new
+x.is_a? couple(XContract) => true
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+okay, I don't have couple() yet, but I have Contractor.
+
+maybe it'd be better to combine it with the Contracted wrapper.
+
+but either way, the more important thing is how to make it into a test.
