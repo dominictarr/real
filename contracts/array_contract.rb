@@ -1,6 +1,8 @@
-require 'contracts/contract'
+require 'contracts' if __FILE__ == $0
 
-ArrayContract =  Contract.new.on{
+#ArrayContract =  Contract.new.on{
+contract (:ArrayContract) {
+
 	name :ArrayContract
      #&, *, +, -, <<, <=>, ==, [], []=, abbrev, assoc, at, choice, clear,
      #collect, collect!, combination, compact, compact!, concat, count,
@@ -106,5 +108,13 @@ ArrayContract =  Contract.new.on{
 		example(true){post []; returned true}
 		example(false){post []; returned false}
 		example(false){post [:z]; returned true}
+	}
+	test {
+		raise "expected empty" unless empty?
+		self << :a
+		self << :b
+		raise "wrong length" unless length == 2
+		delete :b
+		raise "wrong length" unless length == 1
 	}
 }

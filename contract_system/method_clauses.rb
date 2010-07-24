@@ -1,38 +1,11 @@
 require 'monkeypatch/module'
 require 'monkeypatch/array'
 
-require 'contracts/context'
-require 'contracts/clause'
-require 'contracts/contract_violated'
-
-class Contracted
-   instance_methods.reject do |method|
-	   /__.*__/ === method or 'inspect' == method or 'to_s' == method 
-	end.each do |method|
-		undef_method(method)
-	end
-quick_array :contracts
-  
-	def initialize(object,contract)
-		@object = object
-		@contract = contract
-		contracts(contract)
-	end
-	def is_wrapped?
-		true
-	end
-
-	def method_missing(m_name, *args, &block)
-#		puts "\t#{m_name}"
-		h = Context.new(@object)
-		h.args(args)
-		h.block(block)
-
-		to_call = proc {@object.method(m_name).call(*args, &block)}
-	
-		@contract.check_contract(h,m_name,to_call)
-	end
-end
+require 'contract_system/context'
+require 'contract_system/contractor'
+require 'contract_system/clause'
+require 'contract_system/contract_violated'
+require 'contract_system/contract_test'
 
 class MethodClauses #a set of clauses which apply to a particular method
 	quick_attr :clauses,:examples,:line
@@ -132,69 +105,3 @@ def initialize
 	end
 end
 
-class Contract
-	quick_attr :name,:line
-	def check (object)
-		puts "wrap #{object.class} in #{self.name}"
-		Contracted.new(object,self)
-	end
-	def initialize
-		@clauses = Hash.new
-		@method_clauses = Hash.new
-	end
-	def method_clause(sym)
-		@method_clauses[sym]
-	end
-	def on (&block)
-		instance_eval &block
-		line caller.first
-		run_examples
-		self
-	end
-	def get_method_clauses_for(*syms)
-		c = []
-		syms.each{|s|
-			c << @method_clauses[s]
-		}
-		c.uniq!
-		raise "#{syms.inspect} refur to multiple MethodClauses:#{c.inspect}" if c.length > 1
-		c[0] ||  MethodClauses.new
-	end
-	def on_method(*syms,&block)
-		mc = get_method_clauses_for(*syms)
-		if block then
-			mc.on(&block) 
-			mc.line caller.first
-		end
-		syms.each{|sym|
-			@method_clauses[sym] = mc
-		}
-		mc
-	end
-	def run_examples
-		@method_clauses.each{|name,m|
-				begin
-					m.run_examples
-				rescue ExampleFailed => f
-					f.method name
-					raise f
-				end
-		}
-	end
-
-
-	def check_contract(context,method,to_call)
-		m = method_clause(method)
-		begin
-			if m then
-				m.check_method(context,to_call)
-			else
-				to_call.call if m.nil?
-			end
-		rescue ContractViolated => v
-			v.on_method method.to_s
-			raise v
-		end
-
-	end
-end

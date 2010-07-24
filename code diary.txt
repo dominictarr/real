@@ -243,3 +243,48 @@ okay, I don't have couple() yet, but I have Contractor.
 maybe it'd be better to combine it with the Contracted wrapper.
 
 but either way, the more important thing is how to make it into a test.
+
+AAAAAAAAAAAAAAAAAAAAARGHH!!!!!
+
+I've thought of another simpler way to do it. I don't NEEED contracts, tests are okay, 
+but Test::Unit design is basicially, something you can write in JAVA. it's an ugly proto-dsl which 
+doesn't elegantly accomidate testing multiple classes.
+
+all we need is a testing dsl which loosly couples to it's test subject.
+
+it could be done like i've done contracts, 
+	but it will be a bit simpler. 
+	maybe I could still use contracts, but make them blocks which wrap around the function i.e. 
+	being pre/post/and exp methods all in one.
+	I'll still be able to transfer them, since I plan to do that all as one .rb file anyway.
+	
+	i'll still use a couple function... 
+	
+	but, i've still got my 7 litres of coffee.
+	
+	continuing on:
+		klass.respect (contract) 
+			returns true if klass respects (abides by/follows/honours) contract
+		couple(contract) 
+			returns a Contractor for a class which respects contract
+		
+		... this probably means a class which loads contracts and classes and checks them all.
+		i'll need some sort of singleton...
+		
+		also, this is an interesting case... 
+		because now i'm going to use the contract system to write a contract during development.
+		
+		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		okay, well that was a bit messy. fair enough, on the one hand, 
+		because the contract system is still in development. also, 
+		it was complicated by the fact that I had already half inplemented that stuff, monkey patched onto kernel.
+		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		i've gone with respect?(klass,contract) instead.
+		
+		so whats next?
+			... replaceing all instances of is_a? with respect?
+			
+			I expect i'll encounter some circular dependencies which is_a? class isn't susceptable to.
+
+	SOMETHING WEIRD IN CONTEXT_CONTRACT ... it's returning a list of context objects, a class

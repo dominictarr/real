@@ -1,5 +1,5 @@
 require 'test/unit'
-require 'contracts/contract'
+require 'contract_system/contract'
 require 'monkeypatch/array'
 require 'examples/sqrt'
 

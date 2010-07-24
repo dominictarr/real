@@ -1,8 +1,9 @@
 require 'monkeypatch/module'
 require 'monkeypatch/array'
-require 'contracts/context'
-require 'contracts/example_failed'
+require 'contract_system/context'
+require 'contract_system/example_failed'
 require 'helpers/string_helper'
+
 class Example
 	quick_attr :pre,:post,:returned,:args,:raises,:name,:contractual,:block,:line
 	include StringHelper
@@ -12,14 +13,11 @@ class Example
 		line caller.first
 		self
 	end
-	def check
-		raise "Example.check not implemented yet"
-	end
 	def to_s
 		s = "Example:#{name}-- should: #{contractual ? "pass" : "fail"}\n  (from #{line})"
 		s << indent(vals_of(:pre,:post,:returned,:args,:raises))
 		s << "\n"
-end
+	end
 end
 
 class Clause
@@ -82,7 +80,9 @@ class Clause
 		begin
 			returned = nil
 			b = make_block(context,test) if test.is_a? String
-			r = b.call(*context.args,&context.block)
+			raise "clause cannot check #{test}" unless b.is_a? Proc
+			r = b.call(*context.args,&context.block) 
+
 		rescue SyntaxError => e
 			raise SyntaxError.new("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   error evaluating Condition block:\n
@@ -106,6 +106,8 @@ in context:
 #{indent(context.to_s,"    ")}
   #{e.class}:
 #{indent(e.message,"    ")}
+#{indent(e.backtrace.join("\n"),"    ")}
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
 
 			#save the stack trace from where the clause is created...

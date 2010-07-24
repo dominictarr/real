@@ -7,13 +7,14 @@ require 'pp'
 class Context
 	include PP::ObjectMixin
 	include StringHelper
-	quick_attr :object,:returned, :exception,:args,:block
+	quick_attr :object, :exception,:args,:block
 
 	def returned (*r)
 		if r.empty?
 			return @returned
 		else
 			@returned = r[0]
+			self
 		end
 	end
 	def initialize (obj=nil)

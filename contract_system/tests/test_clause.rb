@@ -1,7 +1,7 @@
 
 require 'test/unit'
-require 'contracts/contract'
-require 'contracts/clause'
+require 'contract_system/contract'
+require 'contract_system/clause'
 require 'monkeypatch/array'
 require 'monkeypatch/TestCase'
 require 'examples/sqrt'

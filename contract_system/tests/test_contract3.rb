@@ -1,9 +1,9 @@
 require 'test/unit'
-require 'contracts/contract'
+require 'contract_system/contract'
 require 'monkeypatch/array'
 require 'monkeypatch/TestCase'
 require 'examples/sqrt'
-require 'contracts/tests/test_clause'
+require 'contract_system/tests/test_clause'
 class TestContract3 < Test::Unit::TestCase
 include Test::Unit
 
